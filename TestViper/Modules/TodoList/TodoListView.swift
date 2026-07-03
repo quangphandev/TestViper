@@ -69,9 +69,8 @@ final class TodoListViewController: UIViewController {
     private lazy var addButton: UIButton = {
         let btn = UIButton(type: .custom)
         btn.translatesAutoresizingMaskIntoConstraints = false
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        btn.setImage(UIImage(systemName: "plus", withConfiguration: config), for: .normal)
-        btn.tintColor = .white
+        btn.setImage(UIImage(named: "AddIcon"), for: .normal)
+        btn.imageView?.contentMode = .scaleAspectFit
         btn.addTarget(self, action: #selector(didTapAdd), for: .touchUpInside)
         btn.accessibilityIdentifier = "addTodoButton"
         btn.accessibilityLabel = "Thêm todo"
@@ -136,9 +135,6 @@ final class TodoListViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        addButton.layer.sublayers?
-            .compactMap { $0 as? CAGradientLayer }
-            .forEach { $0.frame = addButton.bounds }
     }
 
     deinit {
@@ -227,12 +223,7 @@ final class TodoListViewController: UIViewController {
     private func setupAddButtonStyle() {
         addButton.layer.cornerRadius = 24
         addButton.layer.masksToBounds = true
-        addButton.applyGradient(
-            colors: [AppTheme.Color.primary, AppTheme.Color.gradientBottom],
-            startPoint: CGPoint(x: 0, y: 0),
-            endPoint: CGPoint(x: 1, y: 1),
-            cornerRadius: 24
-        )
+        addButton.backgroundColor = .clear
     }
 
     // MARK: - Empty State

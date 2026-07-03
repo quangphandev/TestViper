@@ -26,18 +26,21 @@ final class MockTodoListInteractorOutput: TodoListInteractorOutput {
     private(set) var didAddCount = 0
     private(set) var didDeleteCount = 0
     private(set) var didToggleCount = 0
+    private(set) var didEditCount = 0
     private(set) var didFailCount = 0
 
     private(set) var fetchedItems: [TodoItem] = []
     private(set) var addedItem: TodoItem?
     private(set) var deletedId: UUID?
     private(set) var toggledItem: TodoItem?
+    private(set) var editedItem: TodoItem?
     private(set) var lastError: Error?
 
     func didFetchTodos(_ items: [TodoItem]) { didFetchCount += 1; fetchedItems = items }
     func didAddTodo(_ item: TodoItem) { didAddCount += 1; addedItem = item }
     func didDeleteTodo(id: UUID) { didDeleteCount += 1; deletedId = id }
     func didToggleComplete(_ item: TodoItem) { didToggleCount += 1; toggledItem = item }
+    func didEditTodo(_ item: TodoItem) { didEditCount += 1; editedItem = item }
     func didFailWithError(_ error: Error) { didFailCount += 1; lastError = error }
 }
 
@@ -207,5 +210,42 @@ struct TodoListInteractorTests {
         interactor.toggleComplete(id: item.id)
 
         #expect(mockRepo.updateCallCount == 1)
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // MARK: - editTodo Tests
+    // ─────────────────────────────────────────────────────────────
+
+    @Test("editTodo với title hợp lệ phải update repository")
+    func editTodoWithValidTitleShouldUpdateRepo() {
+        let item = TodoItem(title: "Học Swift")
+        let (interactor, mockRepo, _) = makeSUT(stubbedItems: [item])
+
+        interactor.editTodo(id: item.id, newTitle: "Học Swift nâng cao")
+
+        #expect(mockRepo.updateCallCount == 1)
+        #expect(mockRepo.lastUpdatedItem?.title == "Học Swift nâng cao")
+    }
+
+    @Test("editTodo với title hợp lệ phải notify output")
+    func editTodoWithValidTitleShouldNotifyOutput() {
+        let item = TodoItem(title: "Học Swift")
+        let (interactor, _, mockOutput) = makeSUT(stubbedItems: [item])
+
+        interactor.editTodo(id: item.id, newTitle: "Học Swift nâng cao")
+
+        #expect(mockOutput.didEditCount == 1)
+        #expect(mockOutput.editedItem?.title == "Học Swift nâng cao")
+    }
+
+    @Test("editTodo với title rỗng phải báo lỗi và không update")
+    func editTodoWithEmptyTitleShouldFail() {
+        let item = TodoItem(title: "Học Swift")
+        let (interactor, mockRepo, mockOutput) = makeSUT(stubbedItems: [item])
+
+        interactor.editTodo(id: item.id, newTitle: "")
+
+        #expect(mockRepo.updateCallCount == 0)
+        #expect(mockOutput.didFailCount == 1)
     }
 }
