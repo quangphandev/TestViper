@@ -48,4 +48,14 @@ final class MockTodoListInteractor: TodoListInteractorInput {
         toggleCompleteCallCount += 1
         lastToggledId = id
     }
+
+    private(set) var editTodoCallCount = 0
+    private(set) var lastEditedId: UUID?
+    private(set) var lastEditedTitle: String?
+
+    func editTodo(id: UUID, newTitle: String) {
+        editTodoCallCount += 1
+        lastEditedId = id
+        lastEditedTitle = newTitle
+    }
 }

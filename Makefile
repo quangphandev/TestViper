@@ -22,6 +22,15 @@ test-unit:
 		-skip-testing:TestViperUITests \
 		2>&1 | grep -E "Test case|passed|failed|SUCCEEDED|FAILED|error:"
 
+# Chỉ chạy UI TESTS — cần simulator
+test-ui:
+	xcodebuild test \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-destination '$(DEVICE)' \
+		-only-testing:TestViperUITests \
+		2>&1 | grep -E "Test case|passed|failed|SUCCEEDED|FAILED|error:"
+
 # Build only
 build:
 	xcodebuild build \
@@ -30,7 +39,7 @@ build:
 		-destination '$(DEVICE)' \
 		2>&1 | grep -E "error:|warning:|BUILD SUCCEEDED|BUILD FAILED"
 
-# Chỉ chạy Presenter tests
+# Chỉ chạy Presenter tests (TodoList)
 test-presenter:
 	xcodebuild test \
 		-project $(PROJECT) \
@@ -39,13 +48,22 @@ test-presenter:
 		-only-testing:TestViperTests/TodoListPresenterTests \
 		2>&1 | grep -E "Test case|passed|failed|SUCCEEDED|FAILED"
 
-# Chỉ chạy Interactor tests
+# Chỉ chạy Interactor tests (TodoList)
 test-interactor:
 	xcodebuild test \
 		-project $(PROJECT) \
 		-scheme $(SCHEME) \
 		-destination '$(DEVICE)' \
 		-only-testing:TestViperTests/TodoListInteractorTests \
+		2>&1 | grep -E "Test case|passed|failed|SUCCEEDED|FAILED"
+
+# Chỉ chạy Detail Presenter tests
+test-detail:
+	xcodebuild test \
+		-project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-destination '$(DEVICE)' \
+		-only-testing:TestViperTests/TodoDetailPresenterTests \
 		2>&1 | grep -E "Test case|passed|failed|SUCCEEDED|FAILED"
 
 # Build rồi test (full pipeline)
@@ -55,4 +73,4 @@ ci: build test
 clean:
 	xcodebuild clean -project $(PROJECT) -scheme $(SCHEME)
 
-.PHONY: test build test-presenter test-interactor ci clean
+.PHONY: test build test-unit test-ui test-presenter test-interactor test-detail ci clean

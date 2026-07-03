@@ -12,6 +12,7 @@
 //    ✅ Không có business logic
 //    ✅ Không biết UI, không biết mạng, không biết DB
 //    ✅ Dùng struct vì data là value type (copy-on-write, thread-safe hơn)
+//    ✅ Codable để persist vào UserDefaults / JSON
 //
 //  Entity này được tạo bởi Interactor và chuyển qua Presenter.
 //  Presenter KHÔNG hiển thị Entity trực tiếp lên View — nó sẽ
@@ -24,7 +25,7 @@ import Foundation
 
 /// Đại diện cho một todo item trong hệ thống.
 /// Đây là "nguồn sự thật" (source of truth) của dữ liệu.
-struct TodoItem {
+struct TodoItem: Codable {
 
     // UUID giúp mỗi item có ID duy nhất, an toàn khi xoá/update
     let id: UUID
@@ -35,17 +36,27 @@ struct TodoItem {
     // Immutable: ngày tạo không bao giờ thay đổi
     let createdAt: Date
 
+    // Độ ưu tiên: high / medium / low
+    var priority: Priority
+
+    // Hạn chót (optional — có thể không đặt)
+    var dueDate: Date?
+
     /// Khởi tạo với default values để tiện dùng
     init(
         id: UUID = UUID(),
         title: String,
         isCompleted: Bool = false,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        priority: Priority = .medium,
+        dueDate: Date? = nil
     ) {
         self.id = id
         self.title = title
         self.isCompleted = isCompleted
         self.createdAt = createdAt
+        self.priority = priority
+        self.dueDate = dueDate
     }
 }
 

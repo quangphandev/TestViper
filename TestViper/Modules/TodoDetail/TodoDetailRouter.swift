@@ -2,9 +2,8 @@
 //  TodoDetailRouter.swift
 //  TestViper
 //
-//  Router của TodoDetail:
-//  Nhận TodoItem như một dependency khi tạo module.
-//  Đây là cách VIPER truyền data giữa các màn hình — qua Router.
+//  ✅ Bug Fix: nhận shared repository từ TodoListRouter
+//  để inject vào TodoDetailInteractor.
 //
 
 import UIKit
@@ -15,19 +14,18 @@ final class TodoDetailRouter {
 
 extension TodoDetailRouter: TodoDetailRouterInput {
 
-    /// Tạo module với item cụ thể — được gọi bởi TodoListRouter
-    static func createModule(with item: TodoItem) -> UIViewController {
-        let view = TodoDetailViewController()
-        let presenter = TodoDetailPresenter()
-        // Item được inject vào Interactor — không qua View
-        let interactor = TodoDetailInteractor(item: item)
-        let router = TodoDetailRouter()
+    static func createModule(with item: TodoItem, repository: TodoRepositoryProtocol) -> UIViewController {
+        let view       = TodoDetailViewController()
+        let presenter  = TodoDetailPresenter()
+        // ✅ Inject cùng repository instance
+        let interactor = TodoDetailInteractor(item: item, repository: repository)
+        let router     = TodoDetailRouter()
 
-        view.presenter = presenter
-        presenter.view = view
+        view.presenter      = presenter
+        presenter.view      = view
         presenter.interactor = interactor
-        interactor.output = presenter
-        presenter.router = router
+        interactor.output   = presenter
+        presenter.router    = router
         router.viewController = view
 
         return view

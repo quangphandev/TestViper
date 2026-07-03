@@ -6,18 +6,13 @@
 //  ║  VIPER Layer: ROUTER                     ║
 //  ╚══════════════════════════════════════════╝
 //
-//  Router đảm nhiệm 2 việc quan trọng:
+//  Router đảm nhiệm 2 việc:
+//  1. ASSEMBLY: tạo + kết nối toàn bộ VIPER layers
+//  2. NAVIGATION: điều hướng sang màn hình khác
 //
-//  1. ASSEMBLY (Wire-up):
-//     Tạo và kết nối tất cả các layer VIPER với nhau.
-//     Đây là nơi DUY NHẤT biết về tất cả các layer.
-//
-//  2. NAVIGATION:
-//     Điều hướng sang màn hình khác.
-//     Presenter KHÔNG biết cách navigate — nó chỉ gọi router.
-//
-//  Pattern phổ biến: static func createModule() → UIViewController
-//  Caller chỉ cần gọi một dòng để có màn hình hoàn chỉnh.
+//  Bug Fix: Router giữ shared repository instance để truyền
+//  sang TodoDetailRouter khi navigate. Đảm bảo List và Detail
+//  dùng CÙNG một data source.
 //
 
 import UIKit
@@ -26,38 +21,38 @@ import UIKit
 
 final class TodoListRouter {
 
-    // Router giữ weak ref đến View Controller để push/present
     weak var viewController: UIViewController?
 
-    // MARK: - Module Assembly (createModule)
+    /// Shared repository — truyền sang Detail khi navigate
+    private let repository: TodoRepositoryProtocol
 
-    /// Đây là "constructor" của toàn bộ VIPER module.
-    /// Chỉ gọi một lần khi khởi tạo màn hình.
-    ///
-    /// Wire-up order:
-    /// 1. Tạo tất cả các objects
-    /// 2. Kết nối chúng lại với nhau
+    init(repository: TodoRepositoryProtocol) {
+        self.repository = repository
+    }
+
+    // MARK: - Module Assembly
+
     static func createModule() -> UIViewController {
+        // ✅ UserDefaultsTodoRepository — data persist khi app restart
+        let repository = UserDefaultsTodoRepository()
 
-        // 1. Tạo từng layer
-        let view = TodoListViewController()
-        let presenter = TodoListPresenter()
-        let interactor = TodoListInteractor()
-        let router = TodoListRouter()
+        let view       = TodoListViewController()
+        let presenter  = TodoListPresenter()
+        let interactor = TodoListInteractor(repository: repository)
+        let router     = TodoListRouter(repository: repository)
 
-        // 2. Kết nối View ↔ Presenter
-        view.presenter = presenter         // View gọi Presenter qua PresenterInput
-        presenter.view = view              // Presenter update View qua PresenterOutput
+        // Wire-up View ↔ Presenter
+        view.presenter      = presenter
+        presenter.view      = view
 
-        // 3. Kết nối Presenter ↔ Interactor
-        presenter.interactor = interactor  // Presenter gọi Interactor qua InteractorInput
-        interactor.output = presenter      // Interactor trả kết quả về Presenter qua InteractorOutput
+        // Wire-up Presenter ↔ Interactor
+        presenter.interactor = interactor
+        interactor.output    = presenter
 
-        // 4. Kết nối Presenter ↔ Router
-        presenter.router = router          // Presenter điều hướng qua RouterInput
-        router.viewController = view       // Router cần VC để push/present
+        // Wire-up Presenter ↔ Router
+        presenter.router     = router
+        router.viewController = view
 
-        // 5. Wrap trong NavigationController
         let navController = UINavigationController(rootViewController: view)
         return navController
     }
@@ -68,10 +63,8 @@ final class TodoListRouter {
 extension TodoListRouter: TodoListRouterInput {
 
     func navigateToDetail(with item: TodoItem) {
-        // Tạo màn hình Detail thông qua Router của nó
-        let detailVC = TodoDetailRouter.createModule(with: item)
-
-        // Push — cần unwrap navigationController từ viewController
+        // ✅ Bug Fix: truyền cùng repository instance → Detail ghi vào cùng store
+        let detailVC = TodoDetailRouter.createModule(with: item, repository: repository)
         viewController?.navigationController?.pushViewController(detailVC, animated: true)
     }
 }

@@ -3,7 +3,6 @@
 //  TestViper
 //
 //  Protocols cho module TodoDetail.
-//  Module này đơn giản hơn TodoList — chỉ hiển thị, không edit.
 //
 
 import UIKit
@@ -11,24 +10,40 @@ import UIKit
 // MARK: - View → Presenter
 protocol TodoDetailPresenterInput: AnyObject {
     func viewDidLoad()
+    func didTapToggleComplete()
+    func didChangePriority(_ priority: Priority)
+    func didSetDueDate(_ date: Date?)
 }
 
 // MARK: - Presenter → View
 protocol TodoDetailPresenterOutput: AnyObject {
-    func displayTodo(title: String, status: String, statusColor: UIColor, date: String)
+    func displayTodo(
+        title: String,
+        status: String,
+        statusColor: UIColor,
+        date: String,
+        isCompleted: Bool,
+        priority: Priority,
+        dueDate: Date?
+    )
 }
 
 // MARK: - Presenter → Interactor
 protocol TodoDetailInteractorInput: AnyObject {
     func fetchTodo()
+    func toggleComplete()
+    func updatePriority(_ priority: Priority)
+    func updateDueDate(_ date: Date?)
 }
 
 // MARK: - Interactor → Presenter
 protocol TodoDetailInteractorOutput: AnyObject {
     func didFetchTodo(_ item: TodoItem)
+    func didUpdateTodo(_ item: TodoItem)
 }
 
 // MARK: - Router
 protocol TodoDetailRouterInput: AnyObject {
-    static func createModule(with item: TodoItem) -> UIViewController
+    /// ✅ Bug Fix: nhận shared repository từ TodoListRouter
+    static func createModule(with item: TodoItem, repository: TodoRepositoryProtocol) -> UIViewController
 }
